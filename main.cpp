@@ -100,15 +100,15 @@ TM1638_LEDKEY8 LEDKEY8(D11,D12,D13, D10);
 
 char cmd0, bits;
 
-void displayStringAt(char * inString, int startLoc = 0) {
-    char outString[22];
-    for (int i = 0; i < (strlen( inString )) && i < 9; i++) {
-        outString[2*i] = FONT_7S[0x5f&inString[i]];
-        outString[2*i+1]= 0;
-    }
-    LEDKEY8.locate(startLoc);
-    LEDKEY8.writeData(outString);
-}
+//void displayStringAt(char * inString, int startLoc = 0) {
+//    char outString[22];
+//    for (int i = 0; i < (strlen( inString )) && i < 9; i++) {
+//        outString[2*i] = FONT_7S[0x5f&inString[i]];
+//        outString[2*i+1]= 0;
+//    }
+//    LEDKEY8.locate(startLoc);
+//    LEDKEY8.writeData(outString);
+//}
 int main() {
     
     // printf("Hello World\r\n"); //
@@ -198,7 +198,7 @@ int main() {
             if (cmd0 == 0x1a) break;
 //            pc.write(NATO[cmd0],10);
             sprintf(inputChar, "%s", (NATO[cmd0]));
-            displayStringAt(inputChar, 0);
+            LEDKEY8.displayStringAt(inputChar, 0);
             printf(" - %s\r\n", inputChar);
 //            LEDKEY8.writeData(outputChar);
             wait_us(500);
@@ -326,7 +326,7 @@ int main() {
 //          LEDKEY8.writeData(outputChar);
           for (int cnt=0; cnt<=0xFF; cnt++) {
            sprintf(inputChar, "Count%d  ", cnt);
-           displayStringAt(inputChar);
+           LEDKEY8.displayStringAt(inputChar,0);
            ThisThread::sleep_for(200ms);
           }
         printf("Decimal Counting complete\r\n");
@@ -358,7 +358,7 @@ int main() {
           printf("floating point");
           LEDKEY8.cls(); // clear all, preserve Icons
           sprintf(inputChar, " %2.3f", -0.1234);  // test decimal point display 
-          displayStringAt(inputChar, 0);
+          LEDKEY8.displayStringAt(inputChar, 0);
 //          LEDKEY8.writeData(outputChar);
           ThisThread::sleep_for(1000ms);
           LEDKEY8.cls(); // clear all, preserve Icons          
