@@ -28,13 +28,13 @@ static BufferedSerial pc(USBTX, USBRX, 115200);
 
 //                          01234567
 const char NATO[][10] = {
-    {"Alpha   \0"}, {"Bravo   \0"}, {"Charlie \0"}, {"Delta   \0"},
-    {"Echo    \0"}, {"Foxtrot \0"}, {"Golf    \0"}, {"Hotel   \0"},
-    {"India   \0"}, {"Juliet  \0"}, {"Kilo    \0"}, {"Lima    \0"},
-    {"Mike    \0"}, {"November\0"}, {"Oscar   \0"}, {"Papa    \0"},
-    {"Quebec  \0"}, {"Romeo   \0"}, {"Sierra  \0"}, {"Tango   \0"},
-    {"Uniform \0"}, {"Victor  \0"}, {"Whiskey \0"}, {"X-ray   \0"},
-    {"Yankee  \0"}, {"Zulu    \0"}};
+    {"Alpha   "}, {"Bravo   "}, {"Charlie "}, {"Delta   "},
+    {"Echo    "}, {"Foxtrot "}, {"Golf    "}, {"Hotel   "},
+    {"India   "}, {"Juliet  "}, {"Kilo    "}, {"Lima    "},
+    {"Mike    "}, {"November"}, {"Oscar   "}, {"Papa    "},
+    {"Quebec  "}, {"Romeo   "}, {"Sierra  "}, {"Tango   "},
+    {"Uniform "}, {"Victor  "}, {"Whiskey "}, {"X-ray   "},
+    {"Yankee  "}, {"Zulu    "}};
 
 #if (LEDKEY8_TEST == 1)
 // LEDKEY8 TM1638 Test
@@ -108,7 +108,96 @@ TM1638::KeyData_t keydata;
 TM1638_LEDKEY8 LEDKEY8(D11, D12, D13, D10);
 
 char cmd0, bits;
+char displayBuffer[40] = "Hello World";
+uint8_t displayPos = 0;
+char currentDisplay[48] = "";
+DigitalOut blueLED(LED2);
+void fancy_clear()
+{     
+      float delay = 0.1;
+      // Icons on
+      LEDKEY8.setIcon(TM1638_LEDKEY8::LD1);
+      LEDKEY8.setIcon(TM1638_LEDKEY8::DP1);
+      ThisThread::sleep_for(100ms);
+      LEDKEY8.setIcon(TM1638_LEDKEY8::LD2);
+      LEDKEY8.setIcon(TM1638_LEDKEY8::DP2);
+      ThisThread::sleep_for(100ms);
+      LEDKEY8.setIcon(TM1638_LEDKEY8::LD3);
+      LEDKEY8.setIcon(TM1638_LEDKEY8::DP3);
+      ThisThread::sleep_for(100ms);
+      LEDKEY8.setIcon(TM1638_LEDKEY8::LD4);
+      LEDKEY8.setIcon(TM1638_LEDKEY8::DP4);
+      ThisThread::sleep_for(100ms);
+      LEDKEY8.setIcon(TM1638_LEDKEY8::LD5);
+      LEDKEY8.setIcon(TM1638_LEDKEY8::DP5);
+      ThisThread::sleep_for(100ms);
+      LEDKEY8.setIcon(TM1638_LEDKEY8::LD6);
+      LEDKEY8.setIcon(TM1638_LEDKEY8::DP6);
+      ThisThread::sleep_for(100ms);
+      LEDKEY8.setIcon(TM1638_LEDKEY8::LD7);
+      LEDKEY8.setIcon(TM1638_LEDKEY8::DP7);
+      ThisThread::sleep_for(100ms);
+      LEDKEY8.setIcon(TM1638_LEDKEY8::LD8);
+      LEDKEY8.setIcon(TM1638_LEDKEY8::DP8);
+      ThisThread::sleep_for(100ms);
 
+      sprintf(displayBuffer, "%s", "        ");
+      // Icons off
+      LEDKEY8.clrIcon(TM1638_LEDKEY8::LD1);
+      LEDKEY8.clrIcon(TM1638_LEDKEY8::DP1);
+      ThisThread::sleep_for(100ms);
+      LEDKEY8.clrIcon(TM1638_LEDKEY8::LD2);
+      LEDKEY8.clrIcon(TM1638_LEDKEY8::DP2);
+      ThisThread::sleep_for(100ms);
+      LEDKEY8.clrIcon(TM1638_LEDKEY8::LD3);
+      LEDKEY8.clrIcon(TM1638_LEDKEY8::DP3);
+      ThisThread::sleep_for(100ms);
+      LEDKEY8.clrIcon(TM1638_LEDKEY8::LD4);
+      LEDKEY8.clrIcon(TM1638_LEDKEY8::DP4);
+      ThisThread::sleep_for(100ms);
+      LEDKEY8.clrIcon(TM1638_LEDKEY8::LD5);
+      LEDKEY8.clrIcon(TM1638_LEDKEY8::DP5);
+      ThisThread::sleep_for(100ms);
+      LEDKEY8.clrIcon(TM1638_LEDKEY8::LD6);
+      LEDKEY8.clrIcon(TM1638_LEDKEY8::DP6);
+      ThisThread::sleep_for(100ms);
+      LEDKEY8.clrIcon(TM1638_LEDKEY8::LD7);
+      LEDKEY8.clrIcon(TM1638_LEDKEY8::DP7);
+      ThisThread::sleep_for(100ms);
+      LEDKEY8.clrIcon(TM1638_LEDKEY8::LD8);
+      LEDKEY8.clrIcon(TM1638_LEDKEY8::DP8);
+      ThisThread::sleep_for(100ms);
+
+}
+Thread thread;
+void display_thread()
+{
+  static uint8_t lastPos = 0;
+  static uint8_t screenScroller = 0;
+
+  while (1) {
+    // If string in display buffer is longer than 8 characters then scroll to
+    // end of line once per second
+    screenScroller = (screenScroller + 1) % 10;
+    if (screenScroller == 0) {
+        if ((strlen(displayBuffer) > 8))
+            displayPos = (displayPos + 1) % (strlen(displayBuffer) - 7);
+   
+        else
+            displayPos = 0;
+    }
+    // Update the actual display if displayBuffer has changed or we are scrolling
+    if (strcmp(currentDisplay, displayBuffer) || lastPos != displayPos) {
+//        printf("%d %d - %s\r\n", strlen(displayBuffer), displayPos, displayBuffer);
+        lastPos = displayPos;
+        strcpy(currentDisplay, displayBuffer);
+        LEDKEY8.displayStringAt((char *)(currentDisplay + displayPos), 0);
+        blueLED = !blueLED;
+    }
+
+    ThisThread::sleep_for(100ms);
+  }
+}
 // void displayStringAt(char * inString, int startLoc = 0) {
 //    char outString[22];
 //    for (int i = 0; i < (strlen( inString )) && i < 9; i++) {
@@ -120,12 +209,14 @@ char cmd0, bits;
 //}
 int main() {
 
+
   // printf("Hello World\r\n"); //
-  char msg[] = "Hello World\r\n";
+  char msg[] = "Hello World!\r\n";
   char *buff = new char[1];
   pc.write(msg, sizeof(msg));
 
   LEDKEY8.cls();
+//  fancy_clear();
   LEDKEY8.writeData(all_str);
   ThisThread::sleep_for(2ms);
   LEDKEY8.setBrightness(TM1638_BRT3);
@@ -135,8 +226,11 @@ int main() {
   LEDKEY8.setBrightness(TM1638_BRT4);
 
   ThisThread::sleep_for(1ms);
-  LEDKEY8.cls(true);
+  fancy_clear();
+//  LEDKEY8.cls(true);
   LEDKEY8.writeData(hello_str);
+  thread.start(display_thread);
+  strcpy(displayBuffer,"Hello World!");
 
   while (1) {
 
@@ -154,6 +248,7 @@ int main() {
           LEDKEY8.writeData(animate[i]);
           ThisThread::sleep_for(100ms);
         }
+        fancy_clear();
       }
 
       if (keydata[LEDKEY8_SW2_IDX] == LEDKEY8_SW2_BIT) { // sw2
@@ -191,24 +286,23 @@ int main() {
         //          LEDKEY8.writeData(mbed_str);
 
         // test to show all alpha characters
+        fancy_clear();
         printf("Show all NATO Alpha chars\r\n");
-        char outputChar[22];
-        char inputChar[11];
-        LEDKEY8.cls(); // clear all, preserve Icons
-        for (int i = 0; i < 26; i++) {
+        sprintf(displayBuffer,"NATOChar");
+//        LEDKEY8.cls(); // clear all, preserve Icons
+        while (1) {
           LEDKEY8.locate(0);
           //            outputChar = NATO[i];
-          pc.read(buff, sizeof(buff));
-          pc.write(buff, sizeof(buff));
+          pc.read(buff, sizeof(buff));// wait for key
+          pc.write(buff, sizeof(buff));// echo
+        LEDKEY8.cls();
 
-          cmd0 = 0x1f & buff[0] - 1; // wait for key
-          if (cmd0 == 0x1a)
+          if (buff[0] == 0x1b)  // escape pressed?
             break;
-          //            pc.write(NATO[cmd0],10);
-          sprintf(inputChar, "%s", (NATO[cmd0]));
-          LEDKEY8.displayStringAt(inputChar, 0);
-          printf(" - %s\r\n", inputChar);
-          //            LEDKEY8.writeData(outputChar);
+           cmd0 = 0x1f & buff[0] - 1; // convert key to array lookup index
+         //            pc.write(NATO[cmd0],10);
+          sprintf(displayBuffer, "%c - %s", buff[0], (NATO[cmd0]));
+
           wait_us(500);
         }
         printf("Show all NATO Alpha chars done\r\n");
@@ -216,11 +310,9 @@ int main() {
         // test to show all chars
         printf("Show all alpha chars\r\n");
         ThisThread::sleep_for(1ms);
-        LEDKEY8.cls();
-        inputChar[1] = 0;
-        for (int i = 65; i < 65 + 26; i++) {
-          inputChar[0] = i;
-          LEDKEY8.displayStringAt(inputChar, 0);
+        fancy_clear();
+        for (char letter = 65; letter < 65 + 26; letter++) {
+          sprintf(displayBuffer, "%c", letter);
           //            LEDKEY8.printf("%c", char(i + 'a'));
           ThisThread::sleep_for(250ms);
         }
@@ -229,11 +321,10 @@ int main() {
         // test to show all chars
         printf("Show all chars\r\n");
         ThisThread::sleep_for(1ms);
-        LEDKEY8.cls();
+        fancy_clear();
 
-        for (int i = FONT_7S_START; i < FONT_7S_END; i++) {
-          inputChar[0] = i;
-          LEDKEY8.displayStringAt(inputChar, 0);
+        for (char i = FONT_7S_START; i < FONT_7S_END; i++) {
+          sprintf(displayBuffer, "%c", i);
           ThisThread::sleep_for(250ms);
           //            wait(0.25);
           //            cmd = getc(); // wait for key
@@ -294,45 +385,7 @@ int main() {
       // test to show all icons
       printf("Show all icons\r\n");
       LEDKEY8.cls(true); // Also clear all Icons
-
-      float delay = 0.1;
-      // Icons on
-      LEDKEY8.setIcon(TM1638_LEDKEY8::LD1);
-      ThisThread::sleep_for(100ms);
-      LEDKEY8.setIcon(TM1638_LEDKEY8::LD2);
-      ThisThread::sleep_for(100ms);
-      LEDKEY8.setIcon(TM1638_LEDKEY8::LD3);
-      ThisThread::sleep_for(100ms);
-      LEDKEY8.setIcon(TM1638_LEDKEY8::LD4);
-      ThisThread::sleep_for(100ms);
-      LEDKEY8.setIcon(TM1638_LEDKEY8::LD5);
-      ThisThread::sleep_for(100ms);
-      LEDKEY8.setIcon(TM1638_LEDKEY8::LD6);
-      ThisThread::sleep_for(100ms);
-      LEDKEY8.setIcon(TM1638_LEDKEY8::LD7);
-      ThisThread::sleep_for(100ms);
-      LEDKEY8.setIcon(TM1638_LEDKEY8::LD8);
-      ThisThread::sleep_for(100ms);
-
-      ThisThread::sleep_for(1000ms);
-
-      // Icons off
-      LEDKEY8.clrIcon(TM1638_LEDKEY8::LD1);
-      ThisThread::sleep_for(100ms);
-      LEDKEY8.clrIcon(TM1638_LEDKEY8::LD2);
-      ThisThread::sleep_for(100ms);
-      LEDKEY8.clrIcon(TM1638_LEDKEY8::LD3);
-      ThisThread::sleep_for(100ms);
-      LEDKEY8.clrIcon(TM1638_LEDKEY8::LD4);
-      ThisThread::sleep_for(100ms);
-      LEDKEY8.clrIcon(TM1638_LEDKEY8::LD5);
-      ThisThread::sleep_for(100ms);
-      LEDKEY8.clrIcon(TM1638_LEDKEY8::LD6);
-      ThisThread::sleep_for(100ms);
-      LEDKEY8.clrIcon(TM1638_LEDKEY8::LD7);
-      ThisThread::sleep_for(100ms);
-      LEDKEY8.clrIcon(TM1638_LEDKEY8::LD8);
-      ThisThread::sleep_for(100ms);
+      fancy_clear();
 
       //          ThisThread::sleep_for(1ms);
       //          LEDKEY8.cls(); // clear all, preserve Icons
@@ -340,14 +393,15 @@ int main() {
 #endif
     }
     if (keydata[LEDKEY8_SW5_IDX] == LEDKEY8_SW5_BIT) { // sw5
+      fancy_clear();
       printf("Decimal Counting\r\n");
-      char outputChar[22];
-      char inputChar[11];
       LEDKEY8.cls(); // clear all, preserve Icons
+      displayPos = 0;
                      //          LEDKEY8.writeData(outputChar);
       for (int cnt = 0; cnt <= 0xFF; cnt++) {
-        sprintf(inputChar, "Count%d  ", cnt);
-        LEDKEY8.displayStringAt(inputChar, 0);
+        if (cnt < 10) sprintf(displayBuffer, "Count  %d", cnt);
+        else if (cnt < 100) sprintf(displayBuffer, "Count %d", cnt);
+        else sprintf(displayBuffer, "Count%d", cnt);
         ThisThread::sleep_for(200ms);
       }
       printf("Decimal Counting complete\r\n");
@@ -361,7 +415,8 @@ int main() {
             }
     */
     if (keydata[LEDKEY8_SW6_IDX] == LEDKEY8_SW6_BIT) { // sw6
-      LEDKEY8.cls(); // clear all, preserve Icons
+//      LEDKEY8.cls(); // clear all, preserve Icons
+      fancy_clear();
       LEDKEY8.writeData(hello_str);
       printf("Hello");
       ThisThread::sleep_for(1000ms);
@@ -373,63 +428,25 @@ int main() {
     }
 
     if (keydata[LEDKEY8_SW7_IDX] == LEDKEY8_SW7_BIT) { // sw7
-      char outputChar[22];
-      char inputChar[11];
       printf("floating point");
-      LEDKEY8.cls();                         // clear all, preserve Icons
-      sprintf(inputChar, " %2.3f", -0.1234); // test decimal point display
-      LEDKEY8.displayStringAt(inputChar, 0);
-      //          LEDKEY8.writeData(outputChar);
+      fancy_clear();
+//      LEDKEY8.cls();                         // clear all, preserve Icons
+      sprintf(displayBuffer, " %2.3f", -0.1234); // test decimal point display
       ThisThread::sleep_for(1000ms);
-      LEDKEY8.cls();                         // clear all, preserve Icons
-      sprintf(inputChar, "%2.3f", -012.345); // test decimal point display
-      LEDKEY8.writeData(inputChar);
+      fancy_clear();
+//      LEDKEY8.cls();                         // clear all, preserve Icons
+      sprintf(displayBuffer, "%2.3f", -012.345); // test decimal point display
       ThisThread::sleep_for(2000ms);
       printf("floating point complete");
     }
 
     if (keydata[LEDKEY8_SW8_IDX] == LEDKEY8_SW8_BIT) { // sw8
-      float delay = 0.1;
-      // Icons on
-      LEDKEY8.setIcon(TM1638_LEDKEY8::DP1);
-      ThisThread::sleep_for(100ms);
-      LEDKEY8.setIcon(TM1638_LEDKEY8::DP2);
-      ThisThread::sleep_for(100ms);
-      LEDKEY8.setIcon(TM1638_LEDKEY8::DP3);
-      ThisThread::sleep_for(100ms);
-      LEDKEY8.setIcon(TM1638_LEDKEY8::DP4);
-      ThisThread::sleep_for(100ms);
-      LEDKEY8.setIcon(TM1638_LEDKEY8::DP5);
-      ThisThread::sleep_for(100ms);
-      LEDKEY8.setIcon(TM1638_LEDKEY8::DP6);
-      ThisThread::sleep_for(100ms);
-      LEDKEY8.setIcon(TM1638_LEDKEY8::DP7);
-      ThisThread::sleep_for(100ms);
-      LEDKEY8.setIcon(TM1638_LEDKEY8::DP8);
-      ThisThread::sleep_for(100ms);
-
-      ThisThread::sleep_for(100ms);
-
-      // Icons off
-      LEDKEY8.clrIcon(TM1638_LEDKEY8::DP8);
-      ThisThread::sleep_for(100ms);
-      LEDKEY8.clrIcon(TM1638_LEDKEY8::DP7);
-      ThisThread::sleep_for(100ms);
-      LEDKEY8.clrIcon(TM1638_LEDKEY8::DP6);
-      ThisThread::sleep_for(100ms);
-      LEDKEY8.clrIcon(TM1638_LEDKEY8::DP5);
-      ThisThread::sleep_for(100ms);
-      LEDKEY8.clrIcon(TM1638_LEDKEY8::DP4);
-      ThisThread::sleep_for(100ms);
-      LEDKEY8.clrIcon(TM1638_LEDKEY8::DP3);
-      ThisThread::sleep_for(100ms);
-      LEDKEY8.clrIcon(TM1638_LEDKEY8::DP2);
-      ThisThread::sleep_for(100ms);
-      LEDKEY8.clrIcon(TM1638_LEDKEY8::DP1);
-      ThisThread::sleep_for(100ms);
+//      LEDKEY8.cls();                         // clear all, preserve Icons
+      fancy_clear();
     } // if Key
 
     myled = !myled;
-    ThisThread::sleep_for(300ms);
+    ThisThread::sleep_for(250ms);
+
   } // while
 }
